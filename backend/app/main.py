@@ -19,6 +19,9 @@ from app.gemma_service import call_gemma
 from app.pricing_service import calculate_order_totals
 from app.catalogue_service import find_product_candidates, confirm_stock_deduction
 
+from app.bill_service import generate_html_bill
+from fastapi.responses import HTMLResponse
+
 # Setup basic logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -138,7 +141,7 @@ async def ingest_message(event: InboundMessageEvent):
     )
     
     ORDERS_DB[order_id] = draft_order
-    
+
     return APIResponse(
         success=True,
         message="Message processed successfully",
@@ -252,3 +255,26 @@ async def list_products():
         message="Catalogue retrieved",
         data={"products": [p.model_dump() for p in MOCK_CATALOGUE]}
     )
+
+@app.get("/api/orders/{order_id}/bill", response_class=HTMLResponse, tags=["orders"])
+async def get_order_bill(order_id: str):
+    """
+    Developer A: Generates a print-friendly HTML bill for a confirmed order.
+    """
+    if order_id not in ORDERS_DB:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    order = ORDERS_DB[order_id]
+    order_data = order.model_dump()
+    
+    # Attach pricing if it was confirmed (our confirm endpoint adds this)
+    if order.status == OrderStatus.CONFIRMED and "subtotal_minor" not in order_data:
+        # Fallback calculation if somehow missing
+        from app.pricing_service import calculate_order_totals
+        subtotal, discount, total = calculate_order_totals(order)
+        order_data["subtotal_minor"] = subtotal
+        order_data["discount_minor"] = discount
+        order_data["total_minor"] = total
+
+    html_bill = generate_html_bill(order_data)
+    return HTMLResponse(content=html_bill)
