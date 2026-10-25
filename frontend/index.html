@@ -1,28 +1,67 @@
-<!doctype html>
+<!-- frontend/index.html -->
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BhashaOps</title>
-  <link rel="stylesheet" href="styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhashaOps - Inventory Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header>
-    <h1>BhashaOps</h1>
-    <p>From Conversations to Verified Actions</p>
-    <span id="api-status">Checking API…</span>
-  </header>
-  <main>
-    <section>
-      <h2>Demo order message</h2>
-      <form id="message-form">
-        <label for="message-text">Message (Malayalam / Manglish / English)</label>
-        <textarea id="message-text" rows="3" required>chetta 2 kilo atta, 6 ande</textarea>
-        <button type="submit">Submit demo message</button>
-      </form>
-      <pre id="result" aria-live="polite">The message workflow will appear here once integrated.</pre>
-    </section>
-  </main>
-  <script src="app.js"></script>
+    <header>
+        <h1>🏪 BhashaOps Dashboard</h1>
+        <p class="subtitle">From Conversations to Verified Actions</p>
+        <button id="refresh-btn" onclick="loadDashboard()">🔄 Refresh Data</button>
+    </header>
+
+    <main>
+        <!-- Low Stock Alerts -->
+        <section id="alerts-section" class="hidden">
+            <h2>⚠️ Low Stock Alerts</h2>
+            <div id="alerts-container" class="alert-grid"></div>
+        </section>
+
+        <!-- Inventory Table -->
+        <section id="inventory-section">
+            <h2>📦 Current Inventory</h2>
+            <table id="inventory-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Threshold</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body">
+                    <tr><td colspan="6">Loading inventory...</td></tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- Stock Ledger -->
+        <section id="ledger-section">
+            <h2>📜 Stock Ledger (Last 50 Movements)</h2>
+            <table id="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Product ID</th>
+                        <th>Type</th>
+                        <th>Delta</th>
+                        <th>Order Ref</th>
+                        <th>Idempotency Key (Proof of no duplicates)</th>
+                    </tr>
+                </thead>
+                <tbody id="ledger-body">
+                    <tr><td colspan="6">Loading ledger...</td></tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
 </body>
 </html>
