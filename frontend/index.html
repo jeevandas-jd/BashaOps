@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BhashaOps</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>BhashaOps</h1>
+    <p>From Conversations to Verified Actions</p>
+    <span id="api-status">Checking API…</span>
+  </header>
+  <main>
+    <section>
+      <h2>Demo order message</h2>
+      <form id="message-form">
+        <label for="message-text">Message (Malayalam / Manglish / English)</label>
+        <textarea id="message-text" rows="3" required>chetta 2 kilo atta, 6 ande</textarea>
+        <button type="submit">Submit demo message</button>
+      </form>
+      <pre id="result" aria-live="polite">The message workflow will appear here once integrated.</pre>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
