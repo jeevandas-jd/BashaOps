@@ -1,13 +1,19 @@
-"""Central configuration placeholder.
+# backend/app/config.py
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-Keep secrets out of source control. Expand this module when the model and database
-services are integrated.
-"""
-import os
+class Settings(BaseSettings):
+    APP_ENV: str = "development"
+    DATABASE_URL: str = "sqlite:///./bhashaops.db"
+    
+    # Gemma / Ollama Configuration
+    GEMMA_BASE_URL: str = "http://localhost:11434"
+    GEMMA_MODEL: str = "gemma4:e4b"  # Update this if your local model tag is different
+    GEMMA_TIMEOUT: int = 30
+    
+    DEMO_MODE: bool = True
 
+    # Pydantic V2 configuration for .env files
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-APP_ENV = os.getenv("APP_ENV", "development")
-DEMO_MODE = os.getenv("DEMO_MODE", "true").lower() == "true"
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./bhashaops.db")
-GEMMA_BASE_URL = os.getenv("GEMMA_BASE_URL", "http://localhost:11434")
-GEMMA_MODEL = os.getenv("GEMMA_MODEL", "replace-with-verified-model-tag")
+# Instantiate the settings object at the module level
+settings = Settings()
