@@ -106,5 +106,6 @@ class OrderDraft(BaseModel):
 class APIResponse(BaseModel):
     """Standardized API response wrapper."""
     success: bool
-    message: str
-    data: Optional[dict] = None
+    ledger_entries: List[str] = []      # List of created idempotency keys
+    low_stock_alerts: List[str] = []    # List of product IDs that crossed threshold
+    error_message: Optional[str] = None     
