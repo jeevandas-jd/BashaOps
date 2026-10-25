@@ -182,29 +182,25 @@ Windows PowerShell:
 
 ### 3. Install dependencies
 
-If the repository contains a `requirements.txt`:
-
 ``` bash
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
-
-If dependency files are not yet present, create them from the project's
-actual imports and tested versions before asking contributors to install
-the application.
+The backend requires the packages listed in that file, including
+SQLAlchemy and `pydantic-settings`.
 
 ### 4. Configure environment variables
 
 Create a local `.env` based on `.env.example` if provided. For example:
 
 ``` env
-OLLAMA_BASE_URL=http://localhost:11434
-GEMMA_MODEL=<YOUR_VERIFIED_GEMMA_4_MODEL_ID>
+GEMMA_BASE_URL=http://localhost:11434
+GEMMA_MODEL=gemma4:e4b
 DATABASE_URL=sqlite:///./bhashaops.db
 ```
 
-These are illustrative settings. The application must be configured to
-read the variables it actually uses. Never commit `.env`, API keys,
-WhatsApp session files, or real customer data.
+The SQLite URL is resolved relative to `backend/`, regardless of the
+directory from which the seed script or API is run. Never commit `.env`,
+API keys, WhatsApp session files, or real customer data.
 
 ### 5. Verify local model access
 
@@ -215,16 +211,36 @@ it.
 
 ### 6. Run the backend
 
-If the application entry point is `app.main:app`, for example:
+Seed the local demo catalogue from the repository root:
 
-``` bash
-uvicorn app.main:app --reload
+``` powershell
+python scripts\seed_demo.py
 ```
 
-Use the actual module path from the repository. The entry point may
-change during development.
+Start the API from the backend directory:
 
-### 7. Start the WhatsApp connector
+``` powershell
+Set-Location backend
+..\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
+```
+
+The API health endpoint is `http://localhost:8000/api/health`.
+
+### 7. Run the frontend
+
+Serve the frontend over HTTP (ES modules do not work when opening the
+HTML file directly):
+
+``` powershell
+Set-Location frontend
+python -m http.server 5500
+```
+
+Open `http://localhost:5500`. The frontend connects to
+`http://localhost:8000` by default. To use a different API address, set
+`window.BASHAOPS_API_BASE` before loading `app.js`.
+
+### 8. Start the WhatsApp connector
 
 Follow the instructions in the WhatsApp integration directory. Pair only
 a dedicated test account, and ensure the local simulator can be used if

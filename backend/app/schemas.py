@@ -1,7 +1,7 @@
 # backend/app/schemas.py
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import List, Optional, Literal, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 # --- DEVELOPER B: Catalogue & Inventory Contracts ---
@@ -20,12 +20,12 @@ class CatalogueProduct(BaseModel):
 class OrderItemToDeduct(BaseModel):
     product_id: str
     order_item_id: str
-    quantity: int
+    quantity: int = Field(gt=0)
 
 class StockDeductionResult(BaseModel):
     success: bool
-    ledger_entries: List[str] = []
-    low_stock_alerts: List[str] = []
+    ledger_entries: List[str] = Field(default_factory=list)
+    low_stock_alerts: List[str] = Field(default_factory=list)
     error_message: Optional[str] = None
 
 # --- DEVELOPER A: Messaging, Gemma & Order Contracts ---
@@ -50,7 +50,7 @@ class GemmaExtractionResponse(BaseModel):
     intent: Literal["PLACE_ORDER", "CORRECTION", "CANCEL", "GENERAL_CHAT"]
     language: str
     items: List[ExtractedItem]
-    general_notes: List[str] = []
+    general_notes: List[str] = Field(default_factory=list)
 
 class InboundMessageEvent(BaseModel):
     source: Literal["simulator", "whatsapp"] = "simulator"
@@ -58,7 +58,7 @@ class InboundMessageEvent(BaseModel):
     conversation_id: str
     sender_id: str
     text: str
-    received_at: datetime = Field(default_factory=datetime.utcnow)
+    received_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class OrderStatus(str, Enum):
     RECEIVED = "RECEIVED"
@@ -82,7 +82,7 @@ class OrderDraft(BaseModel):
     inbound_message_id: str
     status: OrderStatus = OrderStatus.PARSED
     items: List[OrderItemDraft]
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 # --- SHARED API RESPONSE (Dev A's version for frontend compatibility) ---
 class APIResponse(BaseModel):

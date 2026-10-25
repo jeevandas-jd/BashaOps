@@ -1,12 +1,12 @@
 # scripts/seed_demo.py
 import sys
-import os
 import re
+from pathlib import Path
 
-# Ensure the backend directory is in the Python path so we can import app modules
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+backend_dir = Path(__file__).resolve().parents[1] / "backend"
+sys.path.insert(0, str(backend_dir))
 
-from backend.app.database import init_db, SessionLocal, Product, ProductAlias
+from app.database import Product, ProductAlias, SessionLocal, init_db
 
 def seed():
     print("Initializing database...")
@@ -52,12 +52,12 @@ def seed():
                 norm_alias = re.sub(r'[^\w\s]', '', alias.lower()).strip()
                 db.add(ProductAlias(product_id=product.id, alias_normalized=norm_alias))
             db.commit()
-            print(f"✅ Seeded: {product.name} (Stock: {product.stock_quantity})")
+            print(f"Seeded: {product.name} (Stock: {product.stock_quantity})")
         else:
-            print(f"⏭️ Skipped: {existing.name} (already exists)")
+            print(f"Skipped: {existing.name} (already exists)")
 
     db.close()
-    print("\n🎉 Seeding complete! You can now start the backend.")
+    print("\nSeeding complete! You can now start the backend.")
 
 if __name__ == "__main__":
     seed()

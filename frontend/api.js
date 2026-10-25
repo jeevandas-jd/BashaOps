@@ -1,48 +1,65 @@
-// frontend/api.js
-const API_BASE_URL = "http://localhost:8000";
+const API_BASE =
+  window.BASHAOPS_API_BASE || "http://localhost:8000";
+
+async function request(path, options = {}) {
+  const response = await fetch(`${API_BASE}${path}`, options);
+  const contentType = response.headers.get("content-type") || "";
+  const body = contentType.includes("application/json")
+    ? await response.json()
+    : await response.text();
+
+  if (!response.ok) {
+    const detail =
+      typeof body === "object" && body !== null
+        ? body.detail || body.message
+        : body;
+    throw new Error(detail || `Request failed with status ${response.status}`);
+  }
+  return body;
+}
 
 export const api = {
-  // 1. Submit a new message (Simulator)
-  async submitMessage(messageData) {
-    const response = await fetch(`${API_BASE_URL}/api/messages`, {
+  submitMessage(messageData) {
+    return request("/api/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(messageData),
     });
-    return response.json();
   },
 
-  // 2. Get all orders (for the dashboard inbox)
-  async getOrders() {
-    const response = await fetch(`${API_BASE_URL}/api/orders`);
-    return response.json();
+  getOrders() {
+    return request("/api/orders");
   },
 
-  // 3. Resolve an ambiguous item in an order
-  async resolveOrderItem(orderId, itemIndex, resolvedProductId) {
-    const response = await fetch(
-      `${API_BASE_URL}/api/orders/${orderId}/resolve?item_index=${itemIndex}&resolved_product_id=${resolvedProductId}`,
-      { method: "POST" }
-    );
-    return response.json();
-  },
-
-  // 4. Confirm the order (triggers pricing & stock deduction)
-  async confirmOrder(orderId) {
-    const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}/confirm`, {
+  resolveOrderItem(orderId, itemIndex, resolvedProductId) {
+    const query = new URLSearchParams({
+      item_index: String(itemIndex),
+      resolved_product_id: resolvedProductId,
+    });
+    return request(`/api/orders/${encodeURIComponent(orderId)}/resolve?${query}`, {
       method: "POST",
     });
-    return response.json();
   },
 
-  // 5. Get the printable HTML bill (can be opened in a new tab or iframe)
-  getBillUrl(orderId) {
-    return `${API_BASE_URL}/api/orders/${orderId}/bill`;
+  confirmOrder(orderId) {
+    return request(`/api/orders/${encodeURIComponent(orderId)}/confirm`, {
+      method: "POST",
+    });
   },
-  
-  // 6. Get catalogue products (for the resolution dropdown)
-  async getProducts() {
-    const response = await fetch(`${API_BASE_URL}/api/products`);
-    return response.json();
-  }
+
+  getBillUrl(orderId) {
+    return `${API_BASE}/api/orders/${encodeURIComponent(orderId)}/bill`;
+  },
+
+  getProducts() {
+    return request("/api/products");
+  },
+
+  getInventory() {
+    return request("/api/inventory");
+  },
+
+  getLedger() {
+    return request("/api/inventory/ledger");
+  },
 };

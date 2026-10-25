@@ -1,67 +1,94 @@
-<!-- frontend/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BhashaOps - Inventory Dashboard</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>BhashaOps - WhatsApp Integration Demo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e5ddd5; margin: 0; display: flex; min-height: 100vh; }
+
+        /* Left Side: WhatsApp Simulator */
+        .wa-container { width: 400px; background: #fff; display: flex; flex-direction: column; border-right: 1px solid #ccc; }
+        .wa-header { background: #008069; color: white; padding: 15px; font-weight: bold; display: flex; align-items: center; }
+        .wa-header img { width: 30px; border-radius: 50%; margin-right: 10px; }
+        .chat-history { flex: 1; background: #e5ddd5; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .chat-bubble { max-width: 80%; padding: 10px; border-radius: 10px; font-size: 14px; }
+        .chat-bubble.sent { background: #dcf8c6; align-self: flex-end; }
+        .chat-bubble.received { background: #fff; align-self: flex-start; }
+        .wa-input-area { display: flex; padding: 10px; background: #f0f0f0; }
+        .wa-input-area input { flex: 1; padding: 10px; border: none; border-radius: 20px; outline: none; }
+        .wa-input-area button { background: #008069; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-left: 10px; cursor: pointer; }
+
+        /* Right Side: Dashboard */
+        .dashboard-container { flex: 1; padding: 20px; overflow-y: auto; background: #f9f9f9; }
+        .panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .status-confirmed { color: green; font-weight: bold; }
+        .status-needs_review { color: orange; font-weight: bold; }
+        .status-low { color: red; font-weight: bold; }
+        .status-ok { color: green; }
+        .alert-card { background: #fff3cd; border: 1px solid #ffeeba; padding: 10px; border-radius: 4px; margin: 5px 0; color: #856404; }
+        .order-card { border: 1px solid #ddd; border-radius: 6px; padding: 12px; margin: 10px 0; }
+        .order-heading { display: flex; justify-content: space-between; gap: 12px; }
+        .order-card li { margin: 8px 0; }
+        .order-card button { padding: 8px 12px; cursor: pointer; }
+        .connected { color: green; }
+        .error { color: #b00020; }
+        #connection-status { margin: 0 0 12px; overflow-wrap: anywhere; }
+        @media (max-width: 800px) {
+            body { flex-direction: column; }
+            .wa-container { width: 100%; min-height: 50vh; }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>🏪 BhashaOps Dashboard</h1>
-        <p class="subtitle">From Conversations to Verified Actions</p>
-        <button id="refresh-btn" onclick="loadDashboard()">🔄 Refresh Data</button>
-    </header>
 
-    <main>
-        <!-- Low Stock Alerts -->
-        <section id="alerts-section" class="hidden">
-            <h2>⚠️ Low Stock Alerts</h2>
-            <div id="alerts-container" class="alert-grid"></div>
-        </section>
+    <!-- LEFT: WhatsApp Simulator -->
+    <div class="wa-container">
+        <div class="wa-header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WA">
+            BhashaOps Order Simulator
+        </div>
+        <div class="chat-history" id="chat-history">
+            <div class="chat-bubble received">Welcome to BhashaOps! Send your order here.</div>
+        </div>
+        <div class="wa-input-area">
+            <input type="text" id="wa-input" placeholder="Type a message..." aria-label="Order message">
+            <button id="send-message" type="button">Send</button>
+        </div>
+    </div>
 
-        <!-- Inventory Table -->
-        <section id="inventory-section">
-            <h2>📦 Current Inventory</h2>
-            <table id="inventory-table">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>SKU</th>
-                        <th>Price</th>
-                        <th>Stock</th>
-                        <th>Threshold</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="inventory-body">
-                    <tr><td colspan="6">Loading inventory...</td></tr>
-                </tbody>
+    <!-- RIGHT: Operator Dashboard -->
+    <div class="dashboard-container">
+        <h2> Operator Dashboard</h2>
+        <p id="connection-status" role="status">Connecting to backend...</p>
+        <div class="panel">
+            <h3>️ Low Stock Alerts</h3>
+            <div id="alerts-container">Loading...</div>
+        </div>
+
+        <div class="panel">
+            <h3>📋 Recent Orders</h3>
+            <div id="orders-container">Loading...</div>
+        </div>
+
+        <div class="panel">
+            <h3>📦 Inventory Status</h3>
+            <table>
+                <thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Threshold</th><th>Status</th></tr></thead>
+                <tbody id="inventory-body"><tr><td colspan="5">Loading...</td></tr></tbody>
             </table>
-        </section>
+        </div>
 
-        <!-- Stock Ledger -->
-        <section id="ledger-section">
-            <h2>📜 Stock Ledger (Last 50 Movements)</h2>
-            <table id="ledger-table">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Product ID</th>
-                        <th>Type</th>
-                        <th>Delta</th>
-                        <th>Order Ref</th>
-                        <th>Idempotency Key (Proof of no duplicates)</th>
-                    </tr>
-                </thead>
-                <tbody id="ledger-body">
-                    <tr><td colspan="6">Loading ledger...</td></tr>
-                </tbody>
+        <div class="panel">
+            <h3> Stock Ledger (Proof of Idempotency)</h3>
+            <table>
+                <thead><tr><th>Time</th><th>Product</th><th>Type</th><th>Delta</th><th>Order Ref</th><th>Idempotency Key</th></tr></thead>
+                <tbody id="ledger-body"><tr><td colspan="6">Loading...</td></tr></tbody>
             </table>
-        </section>
-    </main>
+        </div>
+    </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
