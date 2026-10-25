@@ -1,5 +1,5 @@
 # backend/app/schemas.py
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import List, Optional, Literal
 from datetime import datetime
 from enum import Enum
@@ -20,7 +20,6 @@ class CatalogueProduct(BaseModel):
     unit_price_minor: int  # Integer paise (e.g., 1000 = ₹10.00)
     stock_quantity: int
 
-    # Pydantic V2 config for ORM/DB model compatibility
     model_config = ConfigDict(from_attributes=True)
 
 class OrderItemToDeduct(BaseModel):
@@ -32,8 +31,8 @@ class OrderItemToDeduct(BaseModel):
 class StockDeductionResult(BaseModel):
     """Result of an atomic stock deduction transaction."""
     success: bool
-    ledger_entries: List[str] = []      # List of created idempotency keys
-    low_stock_alerts: List[str] = []    # List of product IDs that crossed threshold
+    ledger_entries: List[str] = []      
+    low_stock_alerts: List[str] = []    
     error_message: Optional[str] = None
 
 
@@ -45,12 +44,20 @@ class ExtractedItem(BaseModel):
     """A single item extracted by the Gemma model."""
     product_mention: str
     quantity: float = Field(gt=0)
-    unit: str
+    unit: Optional[str] = None  # Allow null from model
     variant: Optional[str] = None
     pack_size_hint: Optional[str] = None
     source_text: str
     needs_review: bool = False
     clarification_question: Optional[str] = None
+
+    @field_validator('unit')
+    @classmethod
+    def ensure_unit_string(cls, v):
+        # Gracefully handle null or empty strings from the LLM
+        if v is None or str(v).strip() == "":
+            return "piece"
+        return str(v).strip()
 
 class GemmaExtractionResponse(BaseModel):
     """The validated JSON output from the Gemma model."""
