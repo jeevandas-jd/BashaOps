@@ -1,33 +1,30 @@
-"""Shared API/data contracts.
+# backend/app/schemas.py
+from pydantic import BaseModel
+from typing import List, Optional
 
-Keep status names and field names stable. Add Pydantic models here initially;
-split into multiple schema modules when the project grows.
-"""
-from typing import Literal
-from pydantic import BaseModel, Field
+# --- Catalogue Contracts ---
+class CatalogueProduct(BaseModel):
+    id: str
+    sku: str
+    name: str
+    brand: Optional[str] = None
+    variant: Optional[str] = None
+    pack_size: Optional[str] = None
+    base_unit: str
+    unit_price_minor: int  # Integer paise
+    stock_quantity: int
 
+    class Config:
+        from_attributes = True  # Allows converting from SQLAlchemy models
 
-OrderStatus = Literal[
-    "RECEIVED",
-    "PARSING",
-    "NEEDS_REVIEW",
-    "READY_FOR_CONFIRMATION",
-    "CONFIRMED",
-    "FULFILLED",
-    "CANCELLED",
-    "FAILED",
-]
+# --- Inventory & Order Contracts ---
+class OrderItemToDeduct(BaseModel):
+    product_id: str
+    order_item_id: str
+    quantity: int
 
-
-class MessageIn(BaseModel):
-    source: str = "simulator"
-    external_message_id: str = Field(min_length=1, max_length=200)
-    conversation_id: str | None = None
-    sender_id: str | None = None
-    text: str = Field(min_length=1, max_length=5000)
-
-
-class HealthResponse(BaseModel):
-    status: str
-    service: str
-    mode: str
+class StockDeductionResult(BaseModel):
+    success: bool
+    ledger_entries: List[str] = []      # List of created idempotency keys
+    low_stock_alerts: List[str] = []    # List of product IDs that crossed threshold
+    error_message: Optional[str] = None
